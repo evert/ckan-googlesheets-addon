@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- Use a templated HTML printing scriptlet to import common stylesheet -->
+    <?!= HtmlService.createHtmlOutputFromFile('Stylesheet').getContent(); ?>
+  </head>
+  <body>
+    <!-- Below is the HTML code that defines the sidebar element structure. -->
+    <div class="sidebar branding-below">
+      <div class="block form-group">
+          <label for="providers">Open Data Provider</label>
+          <select id="providers" style="width:100%" size="5">
+            <option>City of Toronto</option>
+            <option>Ontario</option>
+            <option>Canada</option>
+          </select>
+      </div>
+      <div class="block add-provider">
+        <button>Add new provider</button>
+      </div>
+      <div class="block form-group">
+          <label for="packages">Data sets</label>
+          <select id="packages" size="5">
+          </select>
+      </div>
+      
+      <div class="block form-group">
+        <label for="description">
+          <b>Description</b>
+        </label>
+        <textarea id="description" rows="15" style="width:100%">Dataset description goes here</textarea>
+      </div>
+    
+      <div class="block">
+       <button class="blue" id = "load-data-sets">Show Me Data</button>
+      </div>
+    </div>
+    
+    <div class="sidebar bottom">
+      <span class="gray">Data powered by CKAN</span>
+    </div>
+
+    <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
+    <?!= HtmlService.createHtmlOutputFromFile('SidebarJavaScript').getContent(); ?>
+  </body>
+</html>
+
