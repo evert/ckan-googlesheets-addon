@@ -1,0 +1,62 @@
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+  /**
+   * Run initializations on sidebar load.
+   */
+  $(function() {
+    // Assign handler functions to elements
+    $('#providers').change(onSelectProvider);
+    $('#packages').change(onSelectPackage);
+    $('#load-data-sets').click(onLoadDataSets);
+
+  });
+
+  /**
+   * Load the package list when the a provider is selected
+   */
+  function onSelectProvider() {
+     
+    var selectedProvider = $('#providers').val();
+    google.script.run
+      .withSuccessHandler(function(packageList) {
+        // First empty the description and packages selection as we are reloading a new list of packages
+        $('#description').val('');
+        $('#packages').empty();
+        for (packageId of packageList) {
+          $('#packages').append($('<option>', {text:packageId}));
+        }
+      })
+      .getPackageList(selectedProvider);
+  }
+
+
+  /**
+   * Load the package description when a package is selected
+   */
+  function onSelectPackage() {
+     
+    var selectedPackageId = $('#packages').val();
+    google.script.run
+      .withSuccessHandler(
+        function(packageContent) {
+          // Load the description
+          $('#description').val(packageContent.notes);
+        })
+      .getDataSet(null, selectedPackageId);
+  }
+  
+  /**
+   * Load the data set for the selected package
+   */
+  function onLoadDataSets() {
+    
+    var selectedPackageId = "council-and-standing-committee-meeting-statistics";//$('#packages').val();
+    google.script.run
+      .withSuccessHandler(
+        function() {
+          alert("yes!");
+        })
+      .showDataSet(null, selectedPackageId);
+  }
+</script>
+
