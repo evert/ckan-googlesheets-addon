@@ -38,8 +38,8 @@ function showSidebar() {
  *  - notes
  *  - downloadUrl
  *
- * It also primies the packageCache variable. This has the same data, but an object
- * indexed by the package name.
+ * It also primes the packageCache variable. This has the same data, but
+ * instead of an array, it's an object indexed by the package name.
  */
 function loadPackageList(providerUrl) {
 
