@@ -4,6 +4,9 @@
    * Run initializations on sidebar load.
    */
   $(function() {
+
+    loadProviders();
+
     // Assign handler functions to elements
     $('#providers').change(onSelectProvider);
     $('#packages').change(onSelectPackage);
@@ -11,17 +14,34 @@
 
   });
 
+  function loadProviders() {
+
+    google.script.run
+      .withSuccessHandler(function(providers) {
+        // First empty the description and packages selection as we are reloading a new list of packages
+        $('#description').val('');
+        $('#providers').empty();
+        for (var provider of providers) {
+          $('#providers').append($('<option>', {text:provider.title, value: provider.url}));
+        }
+        $('#providers').selectedIndex = 0;
+        onSelectProvider();
+      })
+      .getProviderList();
+  }
+
   /**
    * Load the package list when the a provider is selected
    */
   function onSelectProvider() {
 
-    var selectedProvider = $('#providers').val();
+    const selectedProvider = $('#providers').val();
+    $('#packages').empty();
     google.script.run
       .withSuccessHandler(function(packages) {
+        console.log(packages);
         // First empty the description and packages selection as we are reloading a new list of packages
         $('#description').val('');
-        $('#packages').empty();
         for (const package of packages) {
           $('#packages').append($('<option>', {text:package.title, value: package.name}));
         }
@@ -34,6 +54,8 @@
    * Load the package description when a package is selected
    */
   function onSelectPackage() {
+
+    const selectedProvider = $('#providers').val();
     const selectedPackageId = $('#packages').val();
     google.script.run
       .withSuccessHandler(
@@ -42,14 +64,15 @@
           $('#description').val(packageInfo.notes);
         }
       )
-      .getPackageInfoByName(null, selectedPackageId);
+      .getPackageInfoByName(selectedProvider, selectedPackageId);
   }
 
   /**
    * Load the data set for the selected package
    */
   function onLoadDataSets() {
+    const selectedProvider = $('#providers').val();
     const selectedPackageId = $('#packages').val();
-    google.script.run.showDataSet(null, selectedPackageId);
+    google.script.run.showDataSet(selectedProvider, selectedPackageId);
   }
 </script>
