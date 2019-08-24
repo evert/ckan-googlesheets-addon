@@ -1,5 +1,8 @@
 var SIDEBAR_TITLE = 'CKAN Data Explorer';
-var CACHE_PERIOD = 300; // cache for 5 minutes
+
+var packageCache = null;
+var lastProviderUrl = null;
+
 
 /**
  * Adds a custom menu with items to show the sidebar
@@ -26,24 +29,30 @@ function showSidebar() {
 }
 
 /**
- * Returns the list of package ids with a given provider url
- * TODO: map provider to url. Currently we only have the correct url for city of Toronto
+ * This function loads a fresh list of packages from a server, or serves
+ * a cached version.
  *
- * @param {String} providerUrl
- * @returns {String[]}
+ * The returned value is a list of packages with the following keys:
+ *  - name
+ *  - title
+ *  - notes
+ *  - downloadUrl
+ *
+ * It also primes the packageCache variable. This has the same data, but
+ * instead of an array, it's an object indexed by the package name.
  */
-function getPackageList(providerUrl) {
+function loadPackageList(providerUrl) {
 
-  providerUrl = 'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3';
+  if (providerUrl === lastProviderUrl && packageCache !== null) {
+     return Object.values(packageCache);
+  }
+
   const url = providerUrl + '/action/package_search?rows=1000';
   const response = UrlFetchApp.fetch(url).getContentText();
 
   const resultObj = JSON.parse(response);
-  Logger.log(resultObj.result.count);
-  Logger.log(resultObj.result.results.length);
 
-
-  return resultObj.result.results.map( function(dataSet) {
+  const packageList = resultObj.result.results.map( function(dataSet) {
 
     var downloadUrl = null;
 
@@ -58,6 +67,7 @@ function getPackageList(providerUrl) {
       name: dataSet.name,
       title: dataSet.title,
       downloadUrl: downloadUrl,
+      notes: dataSet.notes,
     };
 
   }).filter( function(dataSet) {
@@ -65,33 +75,42 @@ function getPackageList(providerUrl) {
      return dataSet.downloadUrl !== null;
 
   });
-}
 
-/**
- * Returns the data set with the description and list of data belong to the package
- * @param {Object} provider The provider contains the name and url
- * @param {String} packageId Unique identifier for the package
- * @returns {Object} packageContent
- */
-function getDataSet(provider, packageId) {
-  // TODO: provider data with url and name should be provided by CKAN instances or when user add a provider
-  provider = {
-    url:'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3',
-    name: 'city-of-toronto'
-  };
-  // Reduce the number of times we need to fetch data by using the cache service
-  // Ref: https://developers.google.com/apps-script/guides/support/best-practices
-  var cache = CacheService.getScriptCache();
-  var cachedPackageId = provider.name + '-' + packageId;
-  var cachedPackageContent = cache.get(cachedPackageId);
-  if (cachedPackageContent != null) {
-    return JSON.parse(cachedPackageContent).result;
+  packageCache = {};
+
+  for(var ii = 0; ii < packageList.length; ii++) {
+    packageCache[packageList[ii].name] = packageList[ii];
   }
 
-  var url = provider.url + '/action/package_show?id=' + packageId;
-  var response = UrlFetchApp.fetch(url).getContentText();
-  cache.put(cachedPackageId, response, CACHE_PERIOD);
-  return JSON.parse(response).result;
+  lastProviderUrl = providerUrl;
+
+  return packageList;
+
+}
+
+
+
+/**
+ * Returns the list of package ids with a given provider url
+ * TODO: map provider to url. Currently we only have the correct url for city of Toronto
+ *
+ * @param {String} providerUrl
+ * @returns {String[]}
+ */
+function getPackageList(providerUrl) {
+
+  providerUrl = 'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3';
+  return loadPackageList(providerUrl);
+
+}
+
+function getPackageInfoByName(providerUrl, name) {
+
+   providerUrl = 'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3';
+   loadPackageList(providerUrl);
+
+   return packageCache[name];
+
 }
 
 /**
@@ -99,21 +118,11 @@ function getDataSet(provider, packageId) {
  * @param {Object} provider The provider contains the name and url
  * @param {String} packageId Unique identifier for the package
  */
-function showDataSet(provider, packageId) {
-  provider = {
-    url:'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3',
-    name: 'city-of-toronto'
-  };
-   var packageResources = getDataSet(provider, packageId).resources;
-  var spreadsheet = null;
-  for (var i = 0; i < packageResources.length; i++) {
-    // TODO: Deal with non CSV packages
-    if (packageResources[i].format == 'CSV') {
-      // create a new spreadsheet with the data name
-      spreadsheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(packageResources[i].name);
-      importCSVFromWeb(spreadsheet, packageResources[i].url);
-    }
-  }
+function showDataSet(providerUrl, name) {
+
+  var packageInfo = getPackageInfoByName(providerUrl, name);
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(packageInfo.name);
+  importCSVFromWeb(spreadsheet, packageInfo.downloadUrl);
 }
 
 /**
