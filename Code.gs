@@ -14,11 +14,11 @@ var providers = [
     title: 'Ottawa',
   },
   {
-    url: 'https://data.ontario.ca/api/3/',
+    url: 'https://stage.data.ontario.ca/api/3',
     title: 'Ontario',
   },
   {
-    url: 'https://data.canada.ca/api/3/',
+    url: 'https://open.canada.ca/data/api/3',
     title: 'Canada',
   }
 
@@ -32,6 +32,7 @@ var providers = [
  * @param {Object} e The event parameter for a simple onOpen trigger.
  */
 function onOpen(e) {
+  Logger.clear();
   SpreadsheetApp.getUi()
   .createAddonMenu()
   .addItem('Open', 'showSidebar')
@@ -67,8 +68,6 @@ function getPackageList(providerUrl) {
 }
 
 function getPackageInfoByName(providerUrl, name) {
-
-  Logger.log([providerUrl, name]);
 
   loadPackageList(providerUrl);
   Logger.log(packageCache[name]);
@@ -145,6 +144,15 @@ function loadPackageList(providerUrl) {
       title = dataSet.title.en;
     } else {
       title = dataSet.title;
+    }
+
+    var description;
+    if (dataSet.description && dataSet.description.en) {
+      description = dataSet.description.en;
+    } else if (dataSet.description) {
+      description = dataSet.description;
+    } else {
+      description = dataSet.notes;
     }
 
 

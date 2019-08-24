@@ -24,7 +24,7 @@
         for (var provider of providers) {
           $('#providers').append($('<option>', {text:provider.title, value: provider.url}));
         }
-        $('#providers').selectedIndex = 0;
+        $('#providers').val(providers[0].url);
         onSelectProvider();
       })
       .getProviderList();
