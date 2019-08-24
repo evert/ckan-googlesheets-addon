@@ -18,12 +18,12 @@
      
     var selectedProvider = $('#providers').val();
     google.script.run
-      .withSuccessHandler(function(packageList) {
+      .withSuccessHandler(function(packages) {
         // First empty the description and packages selection as we are reloading a new list of packages
         $('#description').val('');
         $('#packages').empty();
-        for (packageId of packageList) {
-          $('#packages').append($('<option>', {text:packageId}));
+        for (const package of packages) {
+          $('#packages').append($('<option>', {text:package.title, value: package.name}));
         }
       })
       .getPackageList(selectedProvider);
@@ -59,4 +59,3 @@
       .showDataSet(null, selectedPackageId);
   }
 </script>
-

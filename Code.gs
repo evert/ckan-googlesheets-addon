@@ -22,7 +22,7 @@ function showSidebar() {
       .setTitle(SIDEBAR_TITLE)
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi().showSidebar(ui);
-  
+
 }
 
 /**
@@ -30,13 +30,41 @@ function showSidebar() {
  * TODO: map provider to url. Currently we only have the correct url for city of Toronto
  *
  * @param {String} providerUrl
- * @returns {String[]} 
+ * @returns {String[]}
  */
 function getPackageList(providerUrl) {
-  providerUrl = 'https://ckan0.cf.opendata.inter.sandbox-toronto.ca/api/3';
-  var url = providerUrl + '/action/package_list';
-  var response = UrlFetchApp.fetch(url).getContentText();
-  return JSON.parse(response).result;
+
+  providerUrl = 'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3';
+  const url = providerUrl + '/action/package_search?rows=1000';
+  const response = UrlFetchApp.fetch(url).getContentText();
+
+  const resultObj = JSON.parse(response);
+  Logger.log(resultObj.result.count);
+  Logger.log(resultObj.result.results.length);
+
+
+  return resultObj.result.results.map( function(dataSet) {
+
+    var downloadUrl = null;
+
+    for(var ii = 0; ii < dataSet.resources.length; ii++) {
+      var resource = dataSet.resources[ii];
+      if (resource.datastore_active) {
+        downloadUrl = resource.url;
+      }
+    }
+
+    return {
+      name: dataSet.name,
+      title: dataSet.title,
+      downloadUrl: downloadUrl,
+    };
+
+  }).filter( function(dataSet) {
+
+     return dataSet.downloadUrl !== null;
+
+  });
 }
 
 /**
@@ -64,8 +92,8 @@ function getDataSet(provider, packageId) {
   var response = UrlFetchApp.fetch(url).getContentText();
   cache.put(cachedPackageId, response, CACHE_PERIOD);
   return JSON.parse(response).result;
-}  
-  
+}
+
 /**
  * Import all the data with CSV format, create a new sheet for each data set
  * @param {Object} provider The provider contains the name and url
@@ -99,4 +127,3 @@ function importCSVFromWeb(spreadsheet, csvUrl) {
   //spreadsheet = SpreadsheetApp.getActiveSheet();
   spreadsheet.getRange(1, 1, csvData.length, csvData[0].length).setValues(csvData);
 }
-
