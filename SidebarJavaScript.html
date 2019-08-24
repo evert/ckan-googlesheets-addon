@@ -15,7 +15,7 @@
    * Load the package list when the a provider is selected
    */
   function onSelectProvider() {
-     
+
     var selectedProvider = $('#providers').val();
     google.script.run
       .withSuccessHandler(function(packages) {
@@ -34,28 +34,22 @@
    * Load the package description when a package is selected
    */
   function onSelectPackage() {
-     
-    var selectedPackageId = $('#packages').val();
+    const selectedPackageId = $('#packages').val();
     google.script.run
       .withSuccessHandler(
-        function(packageContent) {
+        function(packageInfo) {
           // Load the description
-          $('#description').val(packageContent.notes);
-        })
-      .getDataSet(null, selectedPackageId);
+          $('#description').val(packageInfo.notes);
+        }
+      )
+      .getPackageInfoByName(null, selectedPackageId);
   }
-  
+
   /**
    * Load the data set for the selected package
    */
   function onLoadDataSets() {
-    
-    var selectedPackageId = "council-and-standing-committee-meeting-statistics";//$('#packages').val();
-    google.script.run
-      .withSuccessHandler(
-        function() {
-          alert("yes!");
-        })
-      .showDataSet(null, selectedPackageId);
+    const selectedPackageId = $('#packages').val();
+    google.script.run.showDataSet(null, selectedPackageId);
   }
 </script>
