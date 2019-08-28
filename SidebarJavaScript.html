@@ -1,5 +1,7 @@
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script>
+
+
   /**
    * Run initializations on sidebar load.
    */
@@ -14,57 +16,45 @@
 
   });
 
-  function loadProviders() {
+  async function loadProviders() {
 
-    google.script.run
-      .withSuccessHandler(function(providers) {
-        // First empty the description and packages selection as we are reloading a new list of packages
-        $('#description').val('');
-        $('#providers').empty();
-        for (var provider of providers) {
-          $('#providers').append($('<option>', {text:provider.title, value: provider.url}));
-        }
-        $('#providers').val(providers[0].url);
-        onSelectProvider();
-      })
-      .getProviderList();
+    const providers = await gScriptCall('getProviderList');
+    $('#description').val('');
+    $('#providers').empty();
+    for(const provider of providers) {
+       $('#providers').append($('<option>', {text:provider.title, value: provider.url}));
+    }
+    $('#providers').val(providers[0].url);
+    onSelectProvider();
+
   }
 
   /**
    * Load the package list when the a provider is selected
    */
-  function onSelectProvider() {
+  async function onSelectProvider() {
 
     const selectedProvider = $('#providers').val();
+    const packages = await getPackagesForProvider(selectedProvider);
+    console.log(packages);
     $('#packages').empty();
-    google.script.run
-      .withSuccessHandler(function(packages) {
-        console.log(packages);
-        // First empty the description and packages selection as we are reloading a new list of packages
-        $('#description').val('');
-        for (const package of packages) {
-          $('#packages').append($('<option>', {text:package.title, value: package.name}));
-        }
-      })
-      .getPackageList(selectedProvider);
+    $('#description').val('');
+    for (const package of packages.values()) {
+       $('#packages').append($('<option>', {text:package.title, value: package.name}));
+    }
+
   }
 
 
   /**
    * Load the package description when a package is selected
    */
-  function onSelectPackage() {
-
+  async function onSelectPackage() {
     const selectedProvider = $('#providers').val();
     const selectedPackageId = $('#packages').val();
-    google.script.run
-      .withSuccessHandler(
-        function(packageInfo) {
-          // Load the description
-          $('#description').val(packageInfo.notes);
-        }
-      )
-      .getPackageInfoByName(selectedProvider, selectedPackageId);
+    const packageInfo = await getPackageInfo(selectedProvider, selectedPackageId);
+    $('#description').val(packageInfo.notes);
+    $('#downloadUrl').val(packageInfo.downloadUrl);
   }
 
   /**
@@ -75,4 +65,55 @@
     const selectedPackageId = $('#packages').val();
     google.script.run.showDataSet(selectedProvider, selectedPackageId);
   }
+
+  const cachedData = new Map();
+  let cachedProviderUrl = null;
+
+  function getPackagesForProvider(providerUrl) {
+
+    if (providerUrl === cachedProviderUrl) {
+      return Promise.resolve(cachedData);
+    }
+    return new Promise( (res, rej) => {
+       google.script.run
+         .withSuccessHandler(function(packages) {
+             for(const package of packages) {
+                cachedData.set(package.name, package);
+             }
+             cachedProviderUrl = providerUrl;
+             res(cachedData);
+         })
+         .withFailureHandler(err => {
+            rej(err);
+         })
+         .getPackageList(providerUrl);
+     });
+
+  }
+
+  async function getPackageInfo(providerUrl, packageName) {
+     const packages = await getPackagesForProvider(providerUrl);
+     if (!packages.has(packageName)) {
+        throw new Error('Package with name ' + packageName + ' not found');
+     }
+     return packages.get(packageName);
+  }
+
+  function gScriptCall(fn, ...args) {
+
+    return new Promise( (res, rej) => {
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+           res(result);
+        })
+        .withFailureHandler(function(err) {
+           rej(err);
+        })
+        [fn](...args);
+
+    });
+
+  }
+
 </script>

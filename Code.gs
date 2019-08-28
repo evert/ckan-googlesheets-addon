@@ -1,27 +1,19 @@
 var SIDEBAR_TITLE = 'CKAN Data Explorer';
-var CACHE_PERIOD = 300; // cache for 5 minutes
-
-var packageCache = null;
-var lastProviderUrl = null;
 
 var providers = [
   {
-    url: 'https://ckan0.cf.opendata.inter.prod-toronto.ca/api/3',
+    url: 'https://ckan0.cf.opendata.inter.prod-toronto.ca/',
     title: 'City of Toronto',
+    datastoreUrl: 'https://ckan0.cf.opendata.inter.prod-toronto.ca/',
   },
   {
-    url: 'http://data.ottawa.ca/api/3',
-    title: 'Ottawa',
-  },
-  {
-    url: 'https://stage.data.ontario.ca/api/3',
+    url: 'https://stage.data.ontario.ca/',
     title: 'Ontario',
   },
   {
-    url: 'https://open.canada.ca/data/api/3',
+    url: 'https://open.canada.ca/data/',
     title: 'Canada',
   }
-
 ];
 
 
@@ -55,28 +47,6 @@ function getProviderList() {
   return providers;
 }
 
-/**
- * Returns the list of package ids with a given provider url
- *
- * @param {String} providerUrl
- * @returns {String[]}
- */
-function getPackageList(providerUrl) {
-
-  return loadPackageList(providerUrl);
-
-}
-
-function getPackageInfoByName(providerUrl, name) {
-
-  loadPackageList(providerUrl);
-  Logger.log(packageCache[name]);
-  if (!packageCache[name]) {
-    throw new Error('Could not find package with name ' + name + ' for provider ' + providerUrl);
-  }
-
-  return packageCache[name];
-}
 
 /**
  * Import all the data with CSV format, create a new sheet for each data set
@@ -84,7 +54,6 @@ function getPackageInfoByName(providerUrl, name) {
  * @param {String} packageId Unique identifier for the package
  */
 function showDataSet(providerUrl, name) {
-
   var packageInfo = getPackageInfoByName(providerUrl, name);
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(packageInfo.name);
   importCSVFromWeb(spreadsheet, packageInfo.downloadUrl);
@@ -115,15 +84,9 @@ function importCSVFromWeb(spreadsheet, csvUrl) {
  * It also primes the packageCache variable. This has the same data, but
  * instead of an array, it's an object indexed by the package name.
  */
-function loadPackageList(providerUrl) {
+function getPackageList(providerUrl) {
 
-  if (providerUrl === lastProviderUrl && packageCache !== null) {
-     return Object.values(packageCache);
-  }
-
-
-  const url = providerUrl + '/action/package_search?rows=1000';
-  Logger.log(url);
+  const url = providerUrl + 'api/3/action/package_search?rows=1000';
   const response = UrlFetchApp.fetch(url).getContentText();
 
   const resultObj = JSON.parse(response);
@@ -134,9 +97,17 @@ function loadPackageList(providerUrl) {
 
     for(var ii = 0; ii < dataSet.resources.length; ii++) {
       var resource = dataSet.resources[ii];
-      //if (resource.datastore_active) {
+      if (resource.datastore_active) {
+        downloadUrl = providerUrl + 'datastore/dump/' + resource.id;
+        break;
+      }
+      if (resource.mimetype === 'text/csv') {
         downloadUrl = resource.url;
-      //}
+        break;
+      }
+      if (resource.format === 'CSV') {
+        downloadUrl = resource.url;
+      }
     }
 
     var title;
@@ -168,14 +139,6 @@ function loadPackageList(providerUrl) {
      return dataSet.downloadUrl !== null;
 
   });
-
-  packageCache = {};
-
-  for(var ii = 0; ii < packageList.length; ii++) {
-    packageCache[packageList[ii].name] = packageList[ii];
-  }
-
-  lastProviderUrl = providerUrl;
 
   return packageList;
 
