@@ -53,8 +53,7 @@ function getProviderList() {
  * @param {Object} provider The provider contains the name and url
  * @param {String} packageId Unique identifier for the package
  */
-function showDataSet(providerUrl, name) {
-  var packageInfo = getPackageInfoByName(providerUrl, name);
+function showDataSet(packageInfo) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(packageInfo.name);
   importCSVFromWeb(spreadsheet, packageInfo.downloadUrl);
 }
@@ -67,7 +66,6 @@ function showDataSet(providerUrl, name) {
 function importCSVFromWeb(spreadsheet, csvUrl) {
   var csvContent = UrlFetchApp.fetch(csvUrl).getContentText();
   var csvData = Utilities.parseCsv(csvContent);
-  //spreadsheet = SpreadsheetApp.getActiveSheet();
   spreadsheet.getRange(1, 1, csvData.length, csvData[0].length).setValues(csvData);
 }
 
