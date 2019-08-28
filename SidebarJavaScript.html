@@ -35,8 +35,11 @@
   async function onSelectProvider() {
 
     const selectedProvider = $('#providers').val();
+    $('#dataset-info').hide();
+    $('#packages').empty();
+    $('#description').val('');
+
     const packages = await getPackagesForProvider(selectedProvider);
-    console.log(packages);
     $('#packages').empty();
     $('#description').val('');
     for (const package of packages.values()) {
@@ -53,17 +56,19 @@
     const selectedProvider = $('#providers').val();
     const selectedPackageId = $('#packages').val();
     const packageInfo = await getPackageInfo(selectedProvider, selectedPackageId);
-    $('#description').val(packageInfo.notes);
+    $('#description').text(packageInfo.notes);
     $('#downloadUrl').val(packageInfo.downloadUrl);
+    $('#dataset-info').show();
   }
 
   /**
    * Load the data set for the selected package
    */
-  function onLoadDataSets() {
+  async function onLoadDataSets() {
     const selectedProvider = $('#providers').val();
     const selectedPackageId = $('#packages').val();
-    google.script.run.showDataSet(selectedProvider, selectedPackageId);
+    const packageInfo = await getPackageInfo(selectedProvider, selectedPackageId);
+    await gScriptCall('showDataSet', packageInfo);
   }
 
   const cachedData = new Map();
@@ -72,11 +77,15 @@
   function getPackagesForProvider(providerUrl) {
 
     if (providerUrl === cachedProviderUrl) {
+      console.log('Returning cached data for %s', providerUrl);
       return Promise.resolve(cachedData);
     }
+    console.log('Fetching new data for %s', providerUrl);
     return new Promise( (res, rej) => {
        google.script.run
          .withSuccessHandler(function(packages) {
+             console.log('fetch complete for %s', providerUrl);
+             cachedData.clear();
              for(const package of packages) {
                 cachedData.set(package.name, package);
              }
