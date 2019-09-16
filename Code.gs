@@ -52,8 +52,23 @@ function getProviderList() {
  * @param {String} packageId Unique identifier for the package
  */
 function showDataSet(packageInfo) {
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(packageInfo.name);
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  var newSheetName = packageInfo.name;
+
+  if (ss.getSheetByName(newSheetName) !== null) {
+    // A sheet with this name existed, now we're going to add a number to the sheet.
+
+    var num = 1;
+    do {
+      num++;
+    } while(ss.getSheetByName(newSheetName + ' (' + num + ')') !== null);
+    newSheetName = newSheetName + ' (' + num + ')';
+  }
+
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(newSheetName);
   importCSVFromWeb(spreadsheet, packageInfo.downloadUrl);
+  ss.setActiveSheet(spreadsheet);
 }
 
 /**
@@ -145,7 +160,7 @@ function addProviderDialog() {
   var html = HtmlService.createHtmlOutputFromFile("AddProviderDialog")
     .setWidth(340)
     .setHeight(200);
-  
+
   //Display the dialog
   SpreadsheetApp.getUi().showModalDialog(html, "New Provider");
 }
