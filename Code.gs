@@ -16,8 +16,6 @@ var providers = [
   }
 ];
 
-
-
 /**
  * Adds a custom menu with items to show the sidebar
  *
@@ -146,7 +144,7 @@ function addProviderDialog() {
 
   var html = HtmlService.createHtmlOutputFromFile("AddProviderDialog")
     .setWidth(340)
-    .setHeight(130);
+    .setHeight(200);
   
   //Display the dialog
   SpreadsheetApp.getUi().showModalDialog(html, "New Provider");
@@ -155,6 +153,7 @@ function addProviderDialog() {
 function addProvider(newProvider) {
   providers.push(newProvider);
   Logger.log(providers[3]);
-  // need to call loadProviders in the sidebarjavascript.html somehow
+  // Reload sidebar
+  showSidebar();
   return newProvider;
 }
