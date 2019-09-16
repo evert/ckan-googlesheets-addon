@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <!-- Use a templated HTML printing scriptlet to import common stylesheet -->
+    <?!= HtmlService.createHtmlOutputFromFile('Stylesheet').getContent(); ?>
+  </head>
+  <body>
+    <div class="sidebar">
+     
+     <h1>What is this?</h1>
+     <p>
+       The CKAN data explorer allows you to pull in data from CKAN instances everywhere,
+       making it easier to get information from your government into google sheets.
+     </p>
+     <p>
+       This add-on is open source.
+     </p>
+     <h1>Links</h1>
+     <ul>
+       <li><a href="https://github.com/evert/ckan-googlesheets-addon">Github project</a></li>
+       <li><a href="https://ckan.org/">CKAN</a></li>
+     </ul>
+     
+     <p>This add-on is sponsored by the <a href="https://www.toronto.ca/city-government/data-research-maps/open-data/">Toronto Open Data Project</a></p>
+  
+    </div>
+
+  </body>
+</html>

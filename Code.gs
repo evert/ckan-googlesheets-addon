@@ -26,6 +26,7 @@ function onOpen(e) {
   SpreadsheetApp.getUi()
   .createAddonMenu()
   .addItem('Open', 'showSidebar')
+  .addItem('About', 'showAbout')
   .addToUi();
 }
 
@@ -33,12 +34,21 @@ function onOpen(e) {
  * Show the side bar
  */
 function showSidebar() {
-  var ui = HtmlService.createTemplateFromFile('Sidebar')
+  var ui = HtmlService.createTemplateFromFile('Explorer')
       .evaluate()
       .setTitle(SIDEBAR_TITLE)
       .setSandboxMode(HtmlService.SandboxMode.IFRAME);
   SpreadsheetApp.getUi().showSidebar(ui);
-
+}
+/**
+ * Show the side bar
+ */
+function showAbout() {
+  var ui = HtmlService.createTemplateFromFile('About')
+      .evaluate()
+      .setTitle(SIDEBAR_TITLE + ' - About')
+      .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+  SpreadsheetApp.getUi().showSidebar(ui);
 }
 
 function getProviderList() {
