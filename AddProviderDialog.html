@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+  </head>
+  <body>
+    <!-- Below is the HTML code that defines the dialog structure. -->
+    <div class="form-group">
+       <div class="block inline">
+        <label for="title">Title</label>
+        <input type="text" id="title">
+      </div>
+      <div class="block inline">
+        <label for="url">URL</label>
+        <input type="text" id="url">
+      </div>
+      <div id='invalid-title' style="visibility:hidden;">
+        <span class="error">Title can not be empty</span>
+      </div>
+      <div id='invalid-url' style="visibility:hidden;">
+        <span class="error">Invalid URL</span>
+      </div>
+      <div class="block">
+        <button class="action" id="confirm" onclick="addNewProvider()">Confirm</button>
+        <button onclick="google.script.host.close()">Cancel</button>
+      </div>
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script>
+      function addNewProvider(){
+        const newProvider = {
+          title: $('#title').val(),
+          url: $("#url").val()
+        };
+        if(!newProvider.title) {
+          $('#invalid-title').css('visibility', 'visible');
+        } else if(!validateUrlFormat(newProvider.url)){
+          $('#invalid-title').css('visibility', 'hidden');
+          $('#invalid-url').css('visibility', 'visible');
+        } else{
+          $('#invalid-url').css('visibility', 'hidden');
+          google.script.run.withSuccessHandler(closeIt).addProvider(newProvider);
+        }
+      };
+      function closeIt(){
+        google.script.host.close();
+      };
+      function validateUrlFormat(unconfirmedUrl){
+        return unconfirmedUrl.match(/^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/);
+      }
+      
+    </script>
+  </body>
+</html>
+

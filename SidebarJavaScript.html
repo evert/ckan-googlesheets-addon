@@ -13,6 +13,7 @@
     $('#providers').change(onSelectProvider);
     $('#packages').change(onSelectPackage);
     $('#load-data-sets').click(onLoadDataSets);
+    $('#add-provider').click(onAddProviderDialog);
 
   });
 
@@ -100,6 +101,10 @@
 
   }
 
+  async function onAddProviderDialog() {
+    await gScriptCall('addProviderDialog');
+  }
+  
   async function getPackageInfo(providerUrl, packageName) {
      const packages = await getPackagesForProvider(providerUrl);
      if (!packages.has(packageName)) {
