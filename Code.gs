@@ -21,13 +21,20 @@ var providers = [
  *
  * @param {Object} e The event parameter for a simple onOpen trigger.
  */
-function onOpen(e) {
+function onOpen() {
   Logger.clear();
   SpreadsheetApp.getUi()
   .createAddonMenu()
   .addItem('Open', 'showSidebar')
   .addItem('About', 'showAbout')
   .addToUi();
+}
+
+/**
+ * Runs when the Add-on is first installed.
+ */
+function onInstall() {
+  onOpen();
 }
 
 /**
